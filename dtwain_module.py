@@ -107,7 +107,19 @@ def copy_file_to_dtwain_core(search_file):
     return search_and_copy_file(search_file, search_path, copy_to)
 
 def build_core():
-    dtwain_x64_files = ""
-    dtwain_x64_unicode_files = ""
-    dtwain_x86_files = ""
-    dtwain_x86_unicode_files = ""
+    dtwain_x64_files = [
+        "File1.txt",
+        "File2.txt"
+    ]
+    dtwain_x64_unicode_files = [
+        "File1.txt",
+        "File2.txt"
+    ]
+    dtwain_x86_files = [
+        "File1.txt",
+        "File2.txt"
+    ]
+    dtwain_x86_unicode_files = [
+        "File1.txt",
+        "File2.txt"
+    ]
