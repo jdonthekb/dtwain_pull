@@ -11,6 +11,8 @@ import git
 import os
 import shutil
 import zipfile
+import time
+import subprocess
 
 class Progress(git.RemoteProgress):
     def update(self, op_code, cur_count, max_count=None, message=''):
@@ -104,21 +106,6 @@ def search_and_copy_file(search_file, search_path, copy_to):
 
     return f"{search_file} not found in {search_path}"
 
-def copy_file_to_dtwain_core(search_file):
-    """
-    Search for a file in the ./twain_library directory and its subdirectories,
-    then copy it to the ./dtwain_core directory.
-
-    Parameters:
-        search_file (str): The name of the file to search for.
-
-    Returns:
-        str: A message indicating the search and copy status.
-    """
-    search_path = "./twain_library"
-    copy_to = "./dtwain_core"
-    return search_and_copy_file(search_file, search_path, copy_to)
-
 def search_and_extract_file(search_file, search_path):
     # Iterate through the directory and its subdirectories
     for root, _, files in os.walk(search_path):
@@ -147,18 +134,7 @@ def ensure_dtwain_core_directory():
     # Get the current directory where the script is located
     current_directory = os.path.dirname(os.path.abspath(__file__))
     
-    # Specify the name of the directory you want to create
-    dtwain_core_directory = os.path.join(current_directory, "dtwain_core")
-    
-    # Check if the directory already exists
-    if not os.path.exists(dtwain_core_directory):
-        # If it doesn't exist, create the directory
-        os.makedirs(dtwain_core_directory)
-        print(f"Created 'dtwain_core' directory at: {dtwain_core_directory}")
-    else:
-        print(f"'dtwain_core' directory already exists at: {dtwain_core_directory}")
-
-def choose_dtwain_binary():
+    # Specify the names of the directories you want to create
     available_binaries = [
         "dtwain_x86",
         "dtwain_x86_unicode",
@@ -166,44 +142,24 @@ def choose_dtwain_binary():
         "dtwain_x64_unicode",
     ]
 
-    while True:
-        print("Choose a dtwain binary:")
-        for index, binary in enumerate(available_binaries, start=1):
-            print(f"{index}. {binary}")
-        
-        try:
-            choice = int(input("Enter the number (1-4): "))
+    for binaries in available_binaries:
+        if not os.path.exists(os.path.join(current_directory, binaries)):
+                              os.makedirs(os.path.join(current_directory, binaries))
+                              print(f"`Created " + binaries)
 
-            if 1 <= choice <= len(available_binaries):
-                selected_binary = available_binaries[choice - 1]
-                print(f"You chose: {selected_binary}")
-                return selected_binary
-            else:
-                print("Invalid choice. Please enter a valid number (1-4).")
-        except ValueError:
-            print("Invalid input. Please enter a valid number.")
+def remove_directory(directory_path):
+    try:
+        # Wait for a short time to allow any ongoing operations to finish
+        time.sleep(2)  # You can adjust the sleep time as needed
 
-""" # Example usage:
-# Call choose_dtwain_binary() to let the user choose a dtwain binary.
-chosen_binary = choose_dtwain_binary()
+        # Use the os.system command to forcefully remove the directory
+        cmd = f'rd /s /q "{directory_path}"'
+        os.system(cmd)
 
-# Example of how to trigger a function based on the selected binary:
-if chosen_binary == "dtwain_x86":
-    print("Running function for dtwain_x86...")
-    # Call the function for dtwain_x86
-elif chosen_binary == "dtwain_x86_unicode":
-    print("Running function for dtwain_x86_unicode...")
-    # Call the function for dtwain_x86_unicode
-elif chosen_binary == "dtwain_x64":
-    print("Running function for dtwain_x64...")
-    # Call the function for dtwain_x64
-elif chosen_binary == "dtwain_x64_unicode":
-    print("Running function for dtwain_x64_unicode...")
-    # Call the function for dtwain_x64_unicode
- """
+        print(f"Successfully removed directory: {directory_path}")
+    except Exception as e:
+        print(f"Error removing directory with os.system: {str(e)}")
 
-
-core_dir = "./dtwain_core"
 dtwain_x64_files = [
     "dtwain.py",
     "dtwain64.dll",
@@ -247,37 +203,24 @@ dtwain_x86_unicode_files = [
     "twainresourcestrings_english.txt"
 ]
 
-# BINARIES
-# path
-repo_base = "./twain_library"
-x86_binaries = os.path.join(repo_base, "32bit")
-x64_binaries = os.path.join(repo_base, "64bit")
-
 pull_repo()
 extract_files()
 ensure_dtwain_core_directory()
 
-# Call choose_dtwain_binary() to let the user choose a dtwain binary.
-chosen_binary = choose_dtwain_binary()
-3
-# trigger corresponding functions based on the selected binary:
-if chosen_binary == "dtwain_x86":
-    print("Running function for dtwain_x86...")
-    # Call the function for dtwain_x86
-    for file in dtwain_x86_files:
-        copy_file_to_dtwain_core(file)
-elif chosen_binary == "dtwain_x86_unicode":
-    print("Running function for dtwain_x86_unicode...")
-    # Call the function for dtwain_x86_unicode
-    for file in dtwain_x86_unicode_files:
-        copy_file_to_dtwain_core(file)
-elif chosen_binary == "dtwain_x64":
-    print("Running function for dtwain_x64...")
-    # Call the function for dtwain_x64
-    for file in dtwain_x64_files:
-        copy_file_to_dtwain_core(file)
-elif chosen_binary == "dtwain_x64_unicode":
-    print("Running function for dtwain_x64_unicode...")
-    # Call the function for dtwain_x64_unicode
-    for file in dtwain_x64_unicode_files:
-        copy_file_to_dtwain_core(file)
+search_dir = "./twain_library"
+
+for file in dtwain_x64_files:
+     search_and_copy_file(file, search_dir, "dtwain_x64")
+
+
+for file in dtwain_x64_unicode_files:
+     search_and_copy_file(file, search_dir, "dtwain_x64_unicode")
+
+for file in dtwain_x86_files:
+     search_and_copy_file(file, search_dir, "dtwain_x86")
+
+
+for file in dtwain_x86_unicode_files:
+     search_and_copy_file(file, search_dir, "dtwain_x86_unicode")
+
+remove_directory("twain_library")
